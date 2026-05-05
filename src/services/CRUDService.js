@@ -1,13 +1,27 @@
 import bcrypt from 'bcryptjs'; //import thu viện bcryptjs
-import db from '../models/index'; //import database
-import { where } from 'sequelize';
+import User from '../models/user'; // MongoDB model
+// import db from '../models/index'; //import database (MySQL)
+// import { where } from 'sequelize';
 const salt = bcrypt.genSaltSync(10); // thuật toán hash password
 
 let createNewUser = async (data) => { //hàm tạo user với tham số data
     return new Promise(async (resolve, reject) => { //dùng Promise đảm bảo luôn trả kết quả, trong xử lý bất đồng bộ
         try {
             let hashPasswordFromBcrypt = await hashUserPassword(data.password)
-            await db.User.create({
+            // ----- MySQL (Sequelize) -----
+            // await db.User.create({
+            //     email: data.email,
+            //     password: hashPasswordFromBcrypt,
+            //     firstName: data.firstName,
+            //     lastName: data.lastName,
+            //     address: data.address,
+            //     phoneNumber: data.phoneNumber,
+            //     gender: data.gender === '1' ? true : false,
+            //     roleId: data.roleId
+            // })
+
+            // ----- MongoDB (Mongoose) -----
+            await User.create({
                 email: data.email,
                 password: hashPasswordFromBcrypt,
                 firstName: data.firstName,
@@ -42,9 +56,13 @@ let hashUserPassword = (password) => {
 let getAllUser = () => {
     return new Promise(async (resolve, reject) => { //dùng Promise đảm bảo luôn trả kết quả, trong xử lý bất đồng bộ
         try {
-            let users = await db.User.findAll({
-                raw: true, //hiển dữ liệu gốc
-            });
+            // ----- MySQL (Sequelize) -----
+            // let users = await db.User.findAll({
+            //     raw: true, //hiển dữ liệu gốc
+            // });
+
+            // ----- MongoDB (Mongoose) -----
+            let users = await User.find({}).lean();
             resolve(users); //hàm trả về kết quả
         } catch (e) {
             reject(e)
@@ -56,10 +74,14 @@ let getAllUser = () => {
 let getUserInfoById = (userId) => {
     return new Promise(async (resolve, reject) => { //dùng Promise đảm bảo luôn trả kết quả, trong xử lý bất đồng bộ
         try {
-            let user = await db.User.findOne({
-                where: { id: userId }, //query điều kiện cho tham số
-                raw:true
-            });
+            // ----- MySQL (Sequelize) -----
+            // let user = await db.User.findOne({
+            //     where: { id: userId }, //query điều kiện cho tham số
+            //     raw:true
+            // });
+
+            // ----- MongoDB (Mongoose) -----
+            let user = await User.findById(userId).lean();
             if(user){
                 resolve(user); //hàm trả về kết quả
             }else{
@@ -75,19 +97,37 @@ let getUserInfoById = (userId) => {
 let updateUser = (data) =>{
     return new Promise(async (resolve, reject) => { //dùng Promise đảm bảo luôn trả kết quả, trong xử lý bất đồng bộ
         try {
-            let user = await db.User.findOne({
-                where: { id: data.id } //query điều kiện cho tham số
-            });
-            if(user){
-                user.firstName = data.firstName;
-                user.lastName = data.lastName;
-                user.address = data.address;
-                await user.save();
-                //lấy danh sách user
-                let allUsers = await db.User.findAll();
+            // ----- MySQL (Sequelize) -----
+            // let user = await db.User.findOne({
+            //     where: { id: data.id } //query điều kiện cho tham số
+            // });
+            // if(user){
+            //     user.firstName = data.firstName;
+            //     user.lastName = data.lastName;
+            //     user.address = data.address;
+            //     await user.save();
+            //     //lấy danh sách user
+            //     let allUsers = await db.User.findAll();
+            //     resolve(allUsers);
+            // }else{
+            //     resolve(); //hàm trả về kết quả rỗng
+            // }
+
+            // ----- MongoDB (Mongoose) -----
+            let updated = await User.findByIdAndUpdate(
+                data.id,
+                {
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    address: data.address
+                },
+                { new: true }
+            );
+            if(updated){
+                let allUsers = await User.find({}).lean();
                 resolve(allUsers);
             }else{
-                resolve(); //hàm trả về kết quả rỗng
+                resolve();
             }
         } catch (e) {
             reject(e)
@@ -99,12 +139,16 @@ let updateUser = (data) =>{
 let deleteUserById = (userId) => {
     return new Promise(async (resolve, reject) => { //dùng Promise đảm bảo luôn trả kết quả, trong xử lý bất đồng bộ
         try {
-            let user = await db.User.findOne({
-                where: { id : userId }
-            })
-            if(user){
-                user.destroy();
-            }
+            // ----- MySQL (Sequelize) -----
+            // let user = await db.User.findOne({
+            //     where: { id : userId }
+            // })
+            // if(user){
+            //     user.destroy();
+            // }
+
+            // ----- MongoDB (Mongoose) -----
+            await User.findByIdAndDelete(userId);
             resolve(); //là return
         } catch (e) {
             reject(e);

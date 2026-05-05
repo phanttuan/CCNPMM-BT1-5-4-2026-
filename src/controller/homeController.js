@@ -1,11 +1,16 @@
-import db from '../../models/index'; //import database
+import User from '../models/user'; // MongoDB model
+// import db from '../../models/index'; //import database (MySQL)
 import CRUDService from '../services/CRUDService' //import service
 
 //hàm getHomePage
 let getHomePage = async (req, res) => {
     //return res.send('Nguyễn Hữu Trung');
     try {
-        let data = await db.User.findAll(); //lấy dữ liệu từ models/index
+        // ----- MySQL (Sequelize) -----
+        // let data = await db.User.findAll(); //lấy dữ liệu từ models/index
+
+        // ----- MongoDB (Mongoose) -----
+        let data = await User.find({}).lean();
         console.log('----------------------------');
         console.log(data);
         console.log('----------------------------');
